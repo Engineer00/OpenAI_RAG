@@ -76,7 +76,7 @@ with st.sidebar:
             st.session_state.vector_store_created = True
             
             # Upload document
-            file_id = st.session_state.rag.upload_document(uploaded_file.name)
+            file_id = st.session_state.rag.upload_document(uploaded_file)
             
             # Create assistant
             assistant_id = st.session_state.rag.create_assistant()

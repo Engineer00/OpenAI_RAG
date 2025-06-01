@@ -92,6 +92,17 @@ with st.sidebar:
     st.markdown(f"Assistant: {'✅' if st.session_state.assistant_created else '❌'}")
     st.markdown(f"Thread: {'✅' if st.session_state.thread_created else '❌'}")
 
+    # --- SIDEBAR: Chat Management ---
+    st.markdown("---")
+    st.subheader("Chat Management")
+    if st.button("Clear Chat History"):
+        st.session_state.messages = []
+        st.success("Chat history cleared.")
+    if st.session_state.messages:
+        import json
+        chat_json = json.dumps(st.session_state.messages, indent=2)
+        st.download_button("Download Chat History (JSON)", chat_json, file_name="chat_history.json", mime="application/json")
+
 # Main content
 st.title("🤖 AI Document Assistant")
 st.markdown("Upload a document in the sidebar and start chatting!")

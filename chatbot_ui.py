@@ -177,7 +177,8 @@ if st.session_state.thread_created:
                     st.error(f"Error processing uploaded audio: {str(e)}")
     # --- TEXT CHATBOT ---
     user_input = st.text_input("Ask a question about your document:", key="user_input")
-    if user_input:
+    send_text = st.button("Send Message")
+    if send_text and user_input:
         st.session_state.messages.append({
             "role": "user",
             "content": user_input,
@@ -192,6 +193,7 @@ if st.session_state.thread_created:
                     "content": response,
                     "id": len(st.session_state.messages)
                 })
+                st.session_state.user_input = ""
                 st.experimental_rerun()
             except Exception as e:
                 st.error(f"Error: {str(e)}")

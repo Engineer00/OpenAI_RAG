@@ -128,14 +128,13 @@ if st.session_state.thread_created:
                 try:
                     user_question = st.session_state.rag.transcribe_audio(audio_bytes)
                     st.success(f"Transcribed: {user_question}")
-                    # Show transcription in text input for user confirmation
                     st.session_state.user_input = user_question
-                    # Add transcription as user message in chat history
                     st.session_state.messages.append({
                         "role": "user",
                         "content": user_question,
                         "id": len(st.session_state.messages)
                     })
+                    st.info("Voice note sent to assistant.")
                     with st.spinner("Thinking..."):
                         response = st.session_state.rag.ask_question(user_question)
                         st.session_state.messages.append({
@@ -143,6 +142,7 @@ if st.session_state.thread_created:
                             "content": response,
                             "id": len(st.session_state.messages)
                         })
+                        st.success("Assistant replied.")
                         with st.spinner("Synthesizing speech..."):
                             tts_audio = st.session_state.rag.synthesize_speech(response)
                             st.audio(tts_audio, format="audio/mp3")
@@ -151,6 +151,13 @@ if st.session_state.thread_created:
                     st.error(f"Error processing voice note: {str(e)}")
         else:
             st.warning("Please record audio before sending.")
+    # --- UNIFIED CHAT AREA ---
+    st.subheader("Chat History")
+    for msg in st.session_state.messages:
+        if msg["role"] == "user":
+            message(msg["content"], is_user=True, key=f"user_{msg['id']}")
+        else:
+            message(msg["content"], is_user=False, key=f"bot_{msg['id']}")
     uploaded_audio = st.file_uploader("Or upload a voice note (WAV, MP3, M4A)", type=["wav", "mp3", "m4a"], key="audio_upload")
     if uploaded_audio is not None:
         st.audio(uploaded_audio)

@@ -54,10 +54,16 @@ st.markdown("""
 # Initialize session state
 if 'rag' not in st.session_state:
     st.session_state.rag = AdvancedRAG()
+if 'vector_store_created' not in st.session_state:
     st.session_state.vector_store_created = False
+if 'assistant_created' not in st.session_state:
     st.session_state.assistant_created = False
+if 'thread_created' not in st.session_state:
     st.session_state.thread_created = False
+if 'messages' not in st.session_state:
     st.session_state.messages = []
+if 'user_input' not in st.session_state:
+    st.session_state.user_input = ""
 
 # Sidebar
 with st.sidebar:
@@ -107,21 +113,24 @@ with st.sidebar:
 st.title("🤖 AI Document Assistant")
 st.markdown("Upload a document in the sidebar and start chatting!")
 
-# Chat interface
-if st.session_state.thread_created:
-    # Display chat messages
+# --- UNIFIED CHAT AREA (always at the top) ---
+st.subheader("Chat History")
+if st.session_state.messages:
     for msg in st.session_state.messages:
         if msg["role"] == "user":
             message(msg["content"], is_user=True, key=f"user_{msg['id']}")
         else:
             message(msg["content"], is_user=False, key=f"bot_{msg['id']}")
-    
+else:
+    st.info("No messages yet. Start the conversation below!")
+
+if st.session_state.thread_created:
     # --- VOICE NOTE FEATURES ---
     st.subheader("Voice Note (Record or Upload)")
     audio_bytes = st_audiorec()
     if audio_bytes:
         st.audio(audio_bytes, format="audio/wav")
-    send_voice = st.button("Send Voice Note")
+    send_voice = st.button("Send Voice Note", key="send_voice")
     if send_voice:
         if audio_bytes:
             with st.spinner("Transcribing audio..."):
@@ -146,7 +155,7 @@ if st.session_state.thread_created:
                         with st.spinner("Synthesizing speech..."):
                             tts_audio = st.session_state.rag.synthesize_speech(response)
                             st.audio(tts_audio, format="audio/mp3")
-                        st.experimental_rerun()
+                    st.experimental_rerun()
                 except Exception as e:
                     st.error(f"Error processing voice note: {str(e)}")
         else:
@@ -154,7 +163,7 @@ if st.session_state.thread_created:
     uploaded_audio = st.file_uploader("Or upload a voice note (WAV, MP3, M4A)", type=["wav", "mp3", "m4a"], key="audio_upload")
     if uploaded_audio is not None:
         st.audio(uploaded_audio)
-        if st.button("Send Uploaded Voice Note"):
+        if st.button("Send Uploaded Voice Note", key="send_uploaded_voice"):
             audio_bytes = uploaded_audio.read()
             with st.spinner("Transcribing audio..."):
                 try:
@@ -175,12 +184,12 @@ if st.session_state.thread_created:
                         with st.spinner("Synthesizing speech..."):
                             tts_audio = st.session_state.rag.synthesize_speech(response)
                             st.audio(tts_audio, format="audio/mp3")
-                        st.experimental_rerun()
+                    st.experimental_rerun()
                 except Exception as e:
                     st.error(f"Error processing uploaded audio: {str(e)}")
     # --- TEXT CHATBOT ---
-    user_input = st.text_input("Ask a question about your document:", key="user_input")
-    send_text = st.button("Send Message")
+    user_input = st.text_input("Ask a question about your document:", key="user_input", value=st.session_state.user_input)
+    send_text = st.button("Send Message", key="send_text")
     if send_text and user_input:
         st.session_state.messages.append({
             "role": "user",
@@ -200,13 +209,6 @@ if st.session_state.thread_created:
                 st.experimental_rerun()
             except Exception as e:
                 st.error(f"Error: {str(e)}")
-    # --- UNIFIED CHAT AREA (at the end, always up-to-date) ---
-    st.subheader("Chat History")
-    for msg in st.session_state.messages:
-        if msg["role"] == "user":
-            message(msg["content"], is_user=True, key=f"user_{msg['id']}")
-        else:
-            message(msg["content"], is_user=False, key=f"bot_{msg['id']}")
 else:
     st.info("Please upload a document in the sidebar to start chatting!")
 

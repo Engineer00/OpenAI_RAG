@@ -128,6 +128,9 @@ if st.session_state.thread_created:
                 try:
                     user_question = st.session_state.rag.transcribe_audio(audio_bytes)
                     st.success(f"Transcribed: {user_question}")
+                    # Show transcription in text input for user confirmation
+                    st.session_state.user_input = user_question
+                    # Add transcription as user message in chat history
                     st.session_state.messages.append({
                         "role": "user",
                         "content": user_question,

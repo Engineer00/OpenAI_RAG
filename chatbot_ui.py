@@ -71,19 +71,12 @@ with st.sidebar:
             with open(uploaded_file.name, "wb") as f:
                 f.write(uploaded_file.getvalue())
             
-            # Create vector store
-            vector_store_id = st.session_state.rag.create_vector_store()
-            st.session_state.vector_store_created = True
-            
-            # Upload document
+            # Upload document (do NOT create new assistant/vector store/thread)
             file_id = st.session_state.rag.upload_document(uploaded_file)
             
-            # Create assistant
-            assistant_id = st.session_state.rag.create_assistant()
+            # Mark as ready
+            st.session_state.vector_store_created = True
             st.session_state.assistant_created = True
-            
-            # Create thread
-            thread_id = st.session_state.rag.create_thread()
             st.session_state.thread_created = True
             
             # Clean up temporary file

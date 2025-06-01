@@ -65,6 +65,28 @@ if 'messages' not in st.session_state:
 if 'user_input' not in st.session_state:
     st.session_state.user_input = ""
 
+# --- Check for required secrets ---
+missing_secrets = []
+for key in ["OPENAI_API_KEY", "ASSISTANT_ID", "THREAD_ID", "VECTOR_STORE_ID"]:
+    if key not in st.secrets or not st.secrets[key]:
+        missing_secrets.append(key)
+if missing_secrets:
+    st.error(f"Missing required secrets: {', '.join(missing_secrets)}. Please set them in Streamlit Cloud.")
+    st.stop()
+
+# --- DEBUG: Show last error/response in sidebar ---
+if 'last_error' not in st.session_state:
+    st.session_state.last_error = ""
+if 'last_response' not in st.session_state:
+    st.session_state.last_response = ""
+with st.sidebar:
+    st.markdown("---")
+    st.subheader("Debug Info")
+    if st.session_state.last_error:
+        st.error(f"Last error: {st.session_state.last_error}")
+    if st.session_state.last_response:
+        st.info(f"Last response: {st.session_state.last_response}")
+
 # Sidebar
 with st.sidebar:
     st.title("📚 Document Setup")
@@ -109,20 +131,22 @@ with st.sidebar:
         chat_json = json.dumps(st.session_state.messages, indent=2)
         st.download_button("Download Chat History (JSON)", chat_json, file_name="chat_history.json", mime="application/json")
 
-# Main content
+# --- Dedicated Chatbot Screen ---
 st.title("🤖 AI Document Assistant")
 st.markdown("Upload a document in the sidebar and start chatting!")
 
-# --- UNIFIED CHAT AREA (always at the top) ---
-st.subheader("Chat History")
-if st.session_state.messages:
-    for msg in st.session_state.messages:
-        if msg["role"] == "user":
-            message(msg["content"], is_user=True, key=f"user_{msg['id']}")
-        else:
-            message(msg["content"], is_user=False, key=f"bot_{msg['id']}")
-else:
-    st.info("No messages yet. Start the conversation below!")
+# --- Modern Chat Area ---
+st.subheader("Chat")
+chat_container = st.container()
+with chat_container:
+    if st.session_state.messages:
+        for msg in st.session_state.messages:
+            if msg["role"] == "user":
+                message(msg["content"], is_user=True, key=f"user_{msg['id']}")
+            else:
+                message(msg["content"], is_user=False, key=f"bot_{msg['id']}")
+    else:
+        st.info("No messages yet. Start the conversation below!")
 
 if st.session_state.thread_created:
     # --- VOICE NOTE FEATURES ---
@@ -145,19 +169,26 @@ if st.session_state.thread_created:
                     })
                     st.info("Voice note sent to assistant.")
                     with st.spinner("Thinking..."):
-                        response = st.session_state.rag.ask_question(user_question)
-                        st.session_state.messages.append({
-                            "role": "assistant",
-                            "content": response,
-                            "id": len(st.session_state.messages)
-                        })
-                        st.success("Assistant replied.")
-                        with st.spinner("Synthesizing speech..."):
-                            tts_audio = st.session_state.rag.synthesize_speech(response)
-                            st.audio(tts_audio, format="audio/mp3")
-                    st.session_state.user_input = ""
-                    st.experimental_rerun()
+                        try:
+                            response = st.session_state.rag.ask_question(user_question)
+                            st.session_state.messages.append({
+                                "role": "assistant",
+                                "content": response,
+                                "id": len(st.session_state.messages)
+                            })
+                            st.success("Assistant replied.")
+                            with st.spinner("Synthesizing speech..."):
+                                tts_audio = st.session_state.rag.synthesize_speech(response)
+                                st.audio(tts_audio, format="audio/mp3")
+                            st.session_state.user_input = ""
+                            st.session_state.last_error = ""
+                            st.session_state.last_response = response
+                            st.experimental_rerun()
+                        except Exception as e:
+                            st.session_state.last_error = str(e)
+                            st.error(f"Error getting assistant reply: {str(e)}")
                 except Exception as e:
+                    st.session_state.last_error = str(e)
                     st.error(f"Error processing voice note: {str(e)}")
         else:
             st.warning("Please record audio before sending.")
@@ -176,18 +207,25 @@ if st.session_state.thread_created:
                         "id": len(st.session_state.messages)
                     })
                     with st.spinner("Thinking..."):
-                        response = st.session_state.rag.ask_question(user_question)
-                        st.session_state.messages.append({
-                            "role": "assistant",
-                            "content": response,
-                            "id": len(st.session_state.messages)
-                        })
-                        with st.spinner("Synthesizing speech..."):
-                            tts_audio = st.session_state.rag.synthesize_speech(response)
-                            st.audio(tts_audio, format="audio/mp3")
-                    st.session_state.user_input = ""
-                    st.experimental_rerun()
+                        try:
+                            response = st.session_state.rag.ask_question(user_question)
+                            st.session_state.messages.append({
+                                "role": "assistant",
+                                "content": response,
+                                "id": len(st.session_state.messages)
+                            })
+                            with st.spinner("Synthesizing speech..."):
+                                tts_audio = st.session_state.rag.synthesize_speech(response)
+                                st.audio(tts_audio, format="audio/mp3")
+                            st.session_state.user_input = ""
+                            st.session_state.last_error = ""
+                            st.session_state.last_response = response
+                            st.experimental_rerun()
+                        except Exception as e:
+                            st.session_state.last_error = str(e)
+                            st.error(f"Error getting assistant reply: {str(e)}")
                 except Exception as e:
+                    st.session_state.last_error = str(e)
                     st.error(f"Error processing uploaded audio: {str(e)}")
     # --- TEXT CHATBOT ---
     user_input = st.text_input("Ask a question about your document:", key="user_input", value=st.session_state.user_input)
@@ -200,7 +238,6 @@ if st.session_state.thread_created:
         })
         with st.spinner("Thinking..."):
             try:
-                similar_docs = st.session_state.rag.search_similar_documents(user_input)
                 response = st.session_state.rag.ask_question(user_input)
                 st.session_state.messages.append({
                     "role": "assistant",
@@ -208,8 +245,11 @@ if st.session_state.thread_created:
                     "id": len(st.session_state.messages)
                 })
                 st.session_state.user_input = ""
+                st.session_state.last_error = ""
+                st.session_state.last_response = response
                 st.experimental_rerun()
             except Exception as e:
+                st.session_state.last_error = str(e)
                 st.error(f"Error: {str(e)}")
 else:
     st.info("Please upload a document in the sidebar to start chatting!")

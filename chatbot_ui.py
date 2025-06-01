@@ -155,6 +155,7 @@ if st.session_state.thread_created:
                         with st.spinner("Synthesizing speech..."):
                             tts_audio = st.session_state.rag.synthesize_speech(response)
                             st.audio(tts_audio, format="audio/mp3")
+                    st.session_state.user_input = ""
                     st.experimental_rerun()
                 except Exception as e:
                     st.error(f"Error processing voice note: {str(e)}")
@@ -184,6 +185,7 @@ if st.session_state.thread_created:
                         with st.spinner("Synthesizing speech..."):
                             tts_audio = st.session_state.rag.synthesize_speech(response)
                             st.audio(tts_audio, format="audio/mp3")
+                    st.session_state.user_input = ""
                     st.experimental_rerun()
                 except Exception as e:
                     st.error(f"Error processing uploaded audio: {str(e)}")

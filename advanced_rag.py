@@ -165,6 +165,20 @@ class AdvancedRAG:
             st.error(f"Error processing question: {str(e)}")
             raise
 
+    def create_assistant(self, name: str = "Document Assistant") -> str:
+        try:
+            assistant = client.beta.assistants.create(
+                instructions="Use the file provided as your knowledge base to best respond to customer queries.",
+                model="gpt-4-1106-preview",
+                tools=[{"type": "file_search"}],
+                name=name
+            )
+            self.assistant_id = assistant.id
+            return self.assistant_id
+        except Exception as e:
+            st.error(f"Error creating assistant: {str(e)}")
+            raise
+
 def main():
     st.title("Document Q&A Assistant (Voice Note & Text, Custom Component)")
     if 'rag' not in st.session_state:

@@ -105,45 +105,13 @@ if st.session_state.thread_created:
         else:
             message(msg["content"], is_user=False, key=f"bot_{msg['id']}")
     
-    # Chat input
-    user_input = st.text_input("Ask a question about your document:", key="user_input")
-    
-    if user_input:
-        # Add user message to chat
-        st.session_state.messages.append({
-            "role": "user",
-            "content": user_input,
-            "id": len(st.session_state.messages)
-        })
-        
-        # Get bot response
-        with st.spinner("Thinking..."):
-            try:
-                # Search for similar documents
-                similar_docs = st.session_state.rag.search_similar_documents(user_input)
-                
-                # Get assistant's response
-                response = st.session_state.rag.ask_question(user_input)
-                
-                # Add bot response to chat
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": response,
-                    "id": len(st.session_state.messages)
-                })
-                
-                # Rerun to update the chat
-                st.experimental_rerun()
-                
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
-
     # --- VOICE NOTE FEATURES ---
     st.subheader("Voice Note (Record or Upload)")
     audio_bytes = st_audiorec()
     if audio_bytes:
         st.audio(audio_bytes, format="audio/wav")
-        if st.button("Send Voice Note"):
+    if st.button("Send Voice Note"):
+        if audio_bytes:
             with st.spinner("Transcribing audio..."):
                 try:
                     user_question = st.session_state.rag.transcribe_audio(audio_bytes)
@@ -166,6 +134,8 @@ if st.session_state.thread_created:
                         st.experimental_rerun()
                 except Exception as e:
                     st.error(f"Error processing voice note: {str(e)}")
+        else:
+            st.warning("Please record audio before sending.")
     uploaded_audio = st.file_uploader("Or upload a voice note (WAV, MP3, M4A)", type=["wav", "mp3", "m4a"], key="audio_upload")
     if uploaded_audio is not None:
         st.audio(uploaded_audio)
@@ -193,6 +163,26 @@ if st.session_state.thread_created:
                         st.experimental_rerun()
                 except Exception as e:
                     st.error(f"Error processing uploaded audio: {str(e)}")
+    # --- TEXT CHATBOT ---
+    user_input = st.text_input("Ask a question about your document:", key="user_input")
+    if user_input:
+        st.session_state.messages.append({
+            "role": "user",
+            "content": user_input,
+            "id": len(st.session_state.messages)
+        })
+        with st.spinner("Thinking..."):
+            try:
+                similar_docs = st.session_state.rag.search_similar_documents(user_input)
+                response = st.session_state.rag.ask_question(user_input)
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": response,
+                    "id": len(st.session_state.messages)
+                })
+                st.experimental_rerun()
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
 else:
     st.info("Please upload a document in the sidebar to start chatting!")
 

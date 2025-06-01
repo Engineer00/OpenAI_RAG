@@ -28,7 +28,6 @@ except ImportError:
 
 api_key = st.secrets["OPENAI_API_KEY"]
 assistant_id = st.secrets["ASSISTANT_ID"]
-thread_id = st.secrets["THREAD_ID"]
 vector_store_id = st.secrets["VECTOR_STORE_ID"]
 
 if not api_key:
@@ -63,8 +62,13 @@ class AdvancedRAG:
     def __init__(self):
         self.vector_store_id: Optional[str] = vector_store_id
         self.file_ids: List[str] = []
-        self.thread_id: Optional[str] = thread_id
+        self.thread_id: Optional[str] = None
         self.assistant_id: Optional[str] = assistant_id
+
+    def create_thread(self) -> str:
+        thread = client.beta.threads.create()
+        self.thread_id = thread.id
+        return self.thread_id
 
     def create_vector_store(self, name: str = "My Vector Store") -> str:
         try:
@@ -93,8 +97,8 @@ class AdvancedRAG:
                         purpose="assistants"
                     )
                     self.file_ids.append(file_obj.id)
-                # Attach the file to the vector store if needed (optional, depending on your workflow)
-                # If you want to attach to the assistant, you may need to update the assistant with the file (if API supports)
+                # Create a new thread for this document
+                self.create_thread()
                 # Add the file to the thread
                 client.beta.threads.messages.create(
                     thread_id=self.thread_id,

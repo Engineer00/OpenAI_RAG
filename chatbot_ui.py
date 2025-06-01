@@ -40,14 +40,10 @@ except Exception as e:
 
 # --- Check for required secrets ---
 missing_secrets = []
-try:
-    for key in ["OPENAI_API_KEY", "ASSISTANT_ID", "THREAD_ID", "VECTOR_STORE_ID"]:
-        if key not in st.secrets or not st.secrets[key]:
-            missing_secrets.append(key)
-            st.session_state.debug_info.append(f"Missing secret: {key}")
-except Exception as e:
-    st.error(f"Error checking secrets: {str(e)}")
-    st.error(traceback.format_exc())
+for key in ["OPENAI_API_KEY", "ASSISTANT_ID", "VECTOR_STORE_ID"]:
+    if key not in st.secrets or not st.secrets[key]:
+        missing_secrets.append(key)
+        st.session_state.debug_info.append(f"Missing secret: {key}")
 
 # --- DEBUG: Show debug info in sidebar ---
 with st.sidebar:
@@ -134,7 +130,7 @@ with chat_container:
         st.error(f"Missing required secrets: {', '.join(missing_secrets)}. Please set them in Streamlit Cloud.")
 
 # --- Input Widgets (always visible) ---
-if not missing_secrets and st.session_state.thread_created:
+if not missing_secrets and st.session_state.vector_store_created:
     try:
         # --- VOICE NOTE FEATURES ---
         st.subheader("Voice Note (Record or Upload)")

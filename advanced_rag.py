@@ -10,7 +10,7 @@ import hashlib
 import numpy as np
 from io import BytesIO
 
-# Try to import from installed package, fallback to local path for dev
+# Streamlit Cloud Ready: This code is optimized for deployment on Streamlit Cloud.
 try:
     from streamlit_audio_recorder.st_audiorec import st_audiorec  # type: ignore[import]
 except ImportError:
@@ -31,7 +31,7 @@ assistant_id = st.secrets["ASSISTANT_ID"]
 # Removed vector_store_id from secrets
 
 if not api_key:
-    st.error("OpenAI API key not found. Please check your .env file.")
+    st.error("OpenAI API key not found. Please add it to your Streamlit Cloud secrets.")
     st.stop()
 
 # Initialize OpenAI client

@@ -122,4 +122,15 @@ streamlit run chatbot_ui.py
 - The OpenAI Assistants API with retrieval capabilities incurs additional costs
 - Vector store operations may take longer for large documents
 - The system uses GPT-4-1106-preview model by default
-- Make sure your OpenAI API key has access to all required features 
+- Make sure your OpenAI API key has access to all required features
+
+## Deploying on Streamlit Cloud
+
+1. Fork this repo to your GitHub account.
+2. Go to [Streamlit Cloud](https://streamlit.io/cloud) and create a new app from your repo.
+3. In the app settings, add your OpenAI API key and Assistant ID to the `Secrets` section:
+   ```
+   OPENAI_API_KEY=your-key-here
+   ASSISTANT_ID=your-assistant-id-here
+   ```
+4. Click "Deploy". Your app will be live and ready to use! 

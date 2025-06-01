@@ -3,5 +3,4 @@ streamlit
 python-dotenv
 streamlit_chat
 numpy
-pandas>=2.0.0
-streamlit-audiorecorder 
+pandas>=2.0.0 

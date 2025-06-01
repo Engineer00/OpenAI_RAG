@@ -121,7 +121,8 @@ if st.session_state.thread_created:
     audio_bytes = st_audiorec()
     if audio_bytes:
         st.audio(audio_bytes, format="audio/wav")
-    if st.button("Send Voice Note"):
+    send_voice = st.button("Send Voice Note")
+    if send_voice:
         if audio_bytes:
             with st.spinner("Transcribing audio..."):
                 try:

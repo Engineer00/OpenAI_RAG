@@ -142,6 +142,9 @@ class AdvancedRAG:
             st.error(f"Error searching documents: {str(e)}")
             raise
 
+    def search_similar_documents(self, query: str, top_k: int = 3) -> list:
+        return self.search_similar_chunks(query, top_k=top_k)
+
     def synthesize_answer(self, query: str, results) -> str:
         try:
             if not results:

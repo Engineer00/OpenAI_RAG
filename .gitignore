@@ -54,7 +54,7 @@ etc/
 Lib/
 
 # Node modules and build files
-streamlit_audio_recorder/
+# streamlit_audio_recorder/
 node_modules/
 npm-debug.log*
 yarn-debug.log*

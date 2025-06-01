@@ -11,10 +11,10 @@ from io import BytesIO
 
 # Try to import from installed package, fallback to local path for dev
 try:
-    from st_audiorec import st_audiorec  # type: ignore[import]
+    from streamlit_audio_recorder.st_audiorec import st_audiorec  # type: ignore[import]
 except ImportError:
     sys.path.append(os.path.join(os.path.dirname(__file__), 'streamlit_audio_recorder', 'st_audiorec'))
-    from st_audiorec import st_audiorec  # type: ignore[import]
+    from streamlit_audio_recorder.st_audiorec import st_audiorec  # type: ignore[import]
 
 # Load environment variables from .env file
 # load_dotenv()

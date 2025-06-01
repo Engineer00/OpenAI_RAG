@@ -1,7 +1,6 @@
 openai>=1.82.1
 streamlit>=1.32.0
 streamlit_chat
-streamlit_audio_recorder
 python-dotenv
 numpy
 pandas>=2.0.0 

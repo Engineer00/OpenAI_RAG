@@ -11,11 +11,8 @@ import numpy as np
 from io import BytesIO
 
 # Streamlit Cloud Ready: This code is optimized for deployment on Streamlit Cloud.
-try:
-    from streamlit_audio_recorder.st_audiorec import st_audiorec  # type: ignore[import]
-except ImportError:
-    sys.path.append(os.path.join(os.path.dirname(__file__), 'streamlit_audio_recorder', 'st_audiorec'))
-    from streamlit_audio_recorder.st_audiorec import st_audiorec  # type: ignore[import]
+# Audio recorder feature temporarily removed for Streamlit Cloud compatibility.
+# from streamlit_audio_recorder.st_audiorec import st_audiorec  # type: ignore[import]
 
 # Load environment variables from .env file
 # load_dotenv()
@@ -267,7 +264,7 @@ def file_hash(uploaded_file):
     return hashlib.sha256(uploaded_file.getvalue()).hexdigest()
 
 def main():
-    st.title("Document Q&A Assistant (Voice Note & Text, Custom Component)")
+    st.title("Document Q&A Assistant (Text Only, Streamlit Cloud Ready)")
     if 'rag' not in st.session_state:
         st.session_state.rag = AdvancedRAG()
     if 'messages' not in st.session_state:
@@ -308,58 +305,15 @@ def main():
                     st.session_state.disable_widgets = False
 
     if st.session_state.assistant_created:
-        st.subheader("Ask a question (type, record a voice note, or upload audio)")
-        audio_bytes = st_audiorec() if not st.session_state.disable_widgets else None
-        if audio_bytes:
-            st.audio(audio_bytes, format="audio/wav")
-            if st.button("Send Voice Note", disabled=st.session_state.disable_widgets):
-                st.session_state.disable_widgets = True
-                with st.spinner("Transcribing audio..."):
-                    try:
-                        user_question = st.session_state.rag.transcribe_audio(audio_bytes)
-                        st.success(f"Transcribed: {user_question}")
-                        st.session_state.messages.append((user_question, True))
-                        with st.spinner("Thinking..."):
-                            response = st.session_state.rag.ask_question(user_question)
-                            st.session_state.messages.append((response, False))
-                            st.write("Assistant:", response)
-                            with st.spinner("Synthesizing speech..."):
-                                tts_audio = st.session_state.rag.synthesize_speech(response)
-                                st.audio(tts_audio, format="audio/mp3")
-                    except Exception as e:
-                        st.error(f"Error processing voice note: {str(e)}")
-                    finally:
-                        st.session_state.disable_widgets = False
-        
-        # --- AUDIO FILE UPLOAD FOR VOICE NOTE (fallback) ---
-        uploaded_audio = st.file_uploader("Or upload a voice note (WAV, MP3, M4A)", type=["wav", "mp3", "m4a"], key="audio_upload", disabled=st.session_state.disable_widgets)
-        if uploaded_audio is not None:
-            st.audio(uploaded_audio)
-            if st.button("Send Uploaded Voice Note", disabled=st.session_state.disable_widgets):
-                st.session_state.disable_widgets = True
-                audio_bytes = uploaded_audio.read()
-                with st.spinner("Transcribing audio..."):
-                    try:
-                        user_question = st.session_state.rag.transcribe_audio(audio_bytes)
-                        st.success(f"Transcribed: {user_question}")
-                        st.session_state.messages.append((user_question, True))
-                        
-                        with st.spinner("Thinking..."):
-                            response = st.session_state.rag.ask_question(user_question)
-                            st.session_state.messages.append((response, False))
-                            st.write("Assistant:", response)
-                            
-                            # --- TTS ---
-                            with st.spinner("Synthesizing speech..."):
-                                tts_audio = st.session_state.rag.synthesize_speech(response)
-                                st.audio(tts_audio, format="audio/mp3")
-                    except Exception as e:
-                        st.error(f"Error processing uploaded audio: {str(e)}")
-                    finally:
-                        st.session_state.disable_widgets = False
-        
-        # --- TEXT INPUT ---
-        prompt = st.chat_input("Ask a question about your document (or use voice note above)", disabled=st.session_state.disable_widgets)
+        st.subheader("Ask a question about your document (text only)")
+        # --- AUDIO RECORDER REMOVED FOR STREAMLIT CLOUD ---
+        # audio_bytes = st_audiorec() if not st.session_state.disable_widgets else None
+        # if audio_bytes:
+        #     ... (voice note logic removed)
+        # uploaded_audio = st.file_uploader("Or upload a voice note (WAV, MP3, M4A)", type=["wav", "mp3", "m4a"], key="audio_upload", disabled=st.session_state.disable_widgets)
+        # if uploaded_audio is not None:
+        #     ... (voice note upload logic removed)
+        prompt = st.chat_input("Ask a question about your document", disabled=st.session_state.disable_widgets)
         if prompt:
             st.session_state.disable_widgets = True
             user_question = prompt
@@ -369,17 +323,10 @@ def main():
                     response = st.session_state.rag.ask_question(user_question)
                     st.session_state.messages.append((response, False))
                     st.write("Assistant:", response)
-                    
-                    # --- TTS ---
-                    with st.spinner("Synthesizing speech..."):
-                        tts_audio = st.session_state.rag.synthesize_speech(response)
-                        st.audio(tts_audio, format="audio/mp3")
             except Exception as e:
                 st.error(f"Error processing question: {str(e)}")
             finally:
                 st.session_state.disable_widgets = False
-        
-        # Display chat messages
         for i, (msg, is_user) in enumerate(st.session_state.messages):
             message(msg, is_user=is_user, key=str(i))
     else:

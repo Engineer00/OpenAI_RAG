@@ -151,13 +151,6 @@ if st.session_state.thread_created:
                     st.error(f"Error processing voice note: {str(e)}")
         else:
             st.warning("Please record audio before sending.")
-    # --- UNIFIED CHAT AREA ---
-    st.subheader("Chat History")
-    for msg in st.session_state.messages:
-        if msg["role"] == "user":
-            message(msg["content"], is_user=True, key=f"user_{msg['id']}")
-        else:
-            message(msg["content"], is_user=False, key=f"bot_{msg['id']}")
     uploaded_audio = st.file_uploader("Or upload a voice note (WAV, MP3, M4A)", type=["wav", "mp3", "m4a"], key="audio_upload")
     if uploaded_audio is not None:
         st.audio(uploaded_audio)
@@ -207,6 +200,13 @@ if st.session_state.thread_created:
                 st.experimental_rerun()
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+    # --- UNIFIED CHAT AREA (at the end, always up-to-date) ---
+    st.subheader("Chat History")
+    for msg in st.session_state.messages:
+        if msg["role"] == "user":
+            message(msg["content"], is_user=True, key=f"user_{msg['id']}")
+        else:
+            message(msg["content"], is_user=False, key=f"bot_{msg['id']}")
 else:
     st.info("Please upload a document in the sidebar to start chatting!")
 

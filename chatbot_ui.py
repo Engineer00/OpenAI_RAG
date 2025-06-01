@@ -3,6 +3,7 @@ from streamlit_chat import message
 import os
 from advanced_rag import AdvancedRAG
 import time
+from streamlit_audio_recorder.st_audiorec import st_audiorec
 
 # Page config
 st.set_page_config(
@@ -136,6 +137,62 @@ if st.session_state.thread_created:
                 
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+
+    # --- VOICE NOTE FEATURES ---
+    st.subheader("Voice Note (Record or Upload)")
+    audio_bytes = st_audiorec()
+    if audio_bytes:
+        st.audio(audio_bytes, format="audio/wav")
+        if st.button("Send Voice Note"):
+            with st.spinner("Transcribing audio..."):
+                try:
+                    user_question = st.session_state.rag.transcribe_audio(audio_bytes)
+                    st.success(f"Transcribed: {user_question}")
+                    st.session_state.messages.append({
+                        "role": "user",
+                        "content": user_question,
+                        "id": len(st.session_state.messages)
+                    })
+                    with st.spinner("Thinking..."):
+                        response = st.session_state.rag.ask_question(user_question)
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": response,
+                            "id": len(st.session_state.messages)
+                        })
+                        with st.spinner("Synthesizing speech..."):
+                            tts_audio = st.session_state.rag.synthesize_speech(response)
+                            st.audio(tts_audio, format="audio/mp3")
+                        st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"Error processing voice note: {str(e)}")
+    uploaded_audio = st.file_uploader("Or upload a voice note (WAV, MP3, M4A)", type=["wav", "mp3", "m4a"], key="audio_upload")
+    if uploaded_audio is not None:
+        st.audio(uploaded_audio)
+        if st.button("Send Uploaded Voice Note"):
+            audio_bytes = uploaded_audio.read()
+            with st.spinner("Transcribing audio..."):
+                try:
+                    user_question = st.session_state.rag.transcribe_audio(audio_bytes)
+                    st.success(f"Transcribed: {user_question}")
+                    st.session_state.messages.append({
+                        "role": "user",
+                        "content": user_question,
+                        "id": len(st.session_state.messages)
+                    })
+                    with st.spinner("Thinking..."):
+                        response = st.session_state.rag.ask_question(user_question)
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": response,
+                            "id": len(st.session_state.messages)
+                        })
+                        with st.spinner("Synthesizing speech..."):
+                            tts_audio = st.session_state.rag.synthesize_speech(response)
+                            st.audio(tts_audio, format="audio/mp3")
+                        st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"Error processing uploaded audio: {str(e)}")
 else:
     st.info("Please upload a document in the sidebar to start chatting!")
 
